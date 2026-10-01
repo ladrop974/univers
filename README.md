@@ -2,6 +2,8 @@
 
 Des jeux à plusieurs, en duel **par simple lien** : sans compte, sans rien installer, sur téléphone comme sur PC.
 
+**Jouer : https://ladrop974.github.io/univers/**
+
 ## Ce qui marche aujourd'hui
 - **Poules Armageddon** (3D) : 3 poules contre 3 poules, œufs explosifs, terrain destructible, vent.
   Solo contre la poule robot, duel sur le même écran, ou duel en ligne par lien.
