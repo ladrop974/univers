@@ -115,7 +115,7 @@ body.touch #keys{display:none}
 </div>
 
 <!-- CRÉATION -->
-<div id="create" class="scr hidden"><div class="card"><h2 id="crT">Choisis ton organisme</h2><div class="grid3" id="crL"></div><div class="note" id="crN"></div></div></div>
+<div id="create" class="scr hidden"><div class="card"><h2 id="crT">Choisis ton organisme</h2><div class="grid3" id="crL"></div><div class="note" id="crN"></div><button id="bCrBack" style="margin-top:12px;width:100%">Retour</button></div></div>
 
 <!-- ATTENTE EN LIGNE -->
 <div id="waitS" class="scr hidden"><div class="card col" style="max-width:420px;text-align:center"><h2 id="waT">En attente de ton ami…</h2><p id="waP" style="color:var(--dim)"></p><div style="font-size:34px">⧗</div><button class="big p hidden" id="bWaitGo">▶ Lancer</button><button id="bWaitX">Annuler</button></div></div>
@@ -809,7 +809,8 @@ function endGame(w,why){if(G.over)return;G.over=1;G.winner=w;if(G.demo)return;if
  const sc=score(human);if(sc>stats.best)stats.best=sc;if(G.mode!=='local'&&won)stats.wins++;if(G.level!=null&&won&&G.level+1>(stats.camp||0)){stats.camp=G.level+1;if(G.level+1<LEVELS.length)toast('Niveau '+(G.level+2)+' débloqué !')}
  $('#bNext').classList.toggle('hidden',!(G.level!=null&&won&&G.level<LEVELS.length-1));LS.set('stats',stats);show('#endS')}
 function show(id){hideAll();$(id).classList.remove('hidden')}
-function hideAll(){['#waitS','#menu','#create','#opt','#guide','#mutS','#pauseS','#endS'].forEach(s=>$(s).classList.add('hidden'))}
+// cache tous les écrans (.scr), y compris ceux ajoutés plus tard : jamais deux écrans superposés
+function hideAll(){document.querySelectorAll('.scr').forEach(e=>e.classList.add('hidden'))}
 function toMenu(){hideAll();G&&(G.level=null);$('#hud').classList.add('hidden');document.body.classList.remove('two');startDemo();show('#menu');refreshMenu()}
 function refreshMenu(){document.querySelectorAll('[data-k]').forEach(b=>b.classList.toggle('sel',String(prefs[b.dataset.k])===b.dataset.v));$('#best').textContent=stats.best?'meilleur score : '+stats.best+' · victoires : '+stats.wins+' · campagne '+Math.min(stats.camp||0,LEVELS.length)+'/'+LEVELS.length:'';
  document.documentElement.style.setProperty('--c1',PALS[prefs.pal][0]);document.documentElement.style.setProperty('--c2',PALS[prefs.pal][1]);Q=prefs.perf?0:2}
@@ -1012,7 +1013,7 @@ function init(){cv=$('#cv');ctx=cv.getContext('2d',{alpha:false});mini=$('#mini'
  document.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k;let v=b.dataset.v;if(k==='dur'||k==='perf'||k==='mute'||k==='music')v=+v;prefs[k]=v;LS.set('prefs',prefs);if(k==='mute'&&!v)audioInit();refreshMenu();resize()}));
  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>show('#menu')));
  $('#bBot').onclick=()=>startGame('bot');$('#bOnline').onclick=()=>startOnline();$('#bWaitX').onclick=()=>{NET.waiting=0;show('#menu')};$('#bWaitGo').onclick=()=>hostStart();netInit();$('#bLocal').onclick=()=>startGame('local');$('#bGuide').onclick=()=>show('#guide');$('#bOpt').onclick=()=>show('#opt');
- $('#bResume').onclick=togglePause;$('#bMenu').onclick=()=>{G.paused=0;toMenu()};$('#bMenu2').onclick=toMenu;$('#bNext').onclick=()=>{hideAll();lastOpts=levelOpts(G.level+1,lastOpts.arch0,lastOpts.arch1);newGame(lastOpts)};$('#bCamp').onclick=showCamp;
+ $('#bResume').onclick=togglePause;$('#bMenu').onclick=()=>{G.paused=0;toMenu()};$('#bMenu2').onclick=toMenu;$('#bNext').onclick=()=>{hideAll();lastOpts=levelOpts(G.level+1,lastOpts.arch0,lastOpts.arch1);newGame(lastOpts)};$('#bCamp').onclick=showCamp;$('#bCrBack').onclick=()=>{document.onkeydown=null;NET.waiting=0;show('#menu')};
  $('#bKeys').onclick=()=>{capt=null;drawKeys();show('#keysS')};$('#bKeyBack').onclick=()=>{capt=null;show('#opt')};$('#bKeyReset').onclick=()=>{prefs.keys=null;LS.set('prefs',prefs);capt=null;drawKeys()};
  loadAssets();addEventListener('pointerdown',()=>audioInit(),{once:true});addEventListener('keydown',()=>audioInit(),{once:true});
  $('#bAgain').onclick=()=>{hideAll();if(G&&G.net==='host'){NET.waiting=1;show('#waitS');lobby()}else newGame(lastOpts)};
@@ -1021,6 +1022,7 @@ function init(){cv=$('#cv');ctx=cv.getContext('2d',{alpha:false});mini=$('#mini'
  $('#hMute').onclick=()=>{prefs.mute=prefs.mute?0:1;LS.set('prefs',prefs);if(!prefs.mute)audioInit();$('#hMute').textContent=prefs.mute?'🔇':'🔊'};
  $('#swap').onclick=()=>{if(G&&G.mode==='local'){G.active=1-G.active;joys.clear();touchBtn=[0,1,2,3,4].map(()=>({atk:0}));toast('Contrôle : '+G.players[G.active].name)}};
  refreshMenu();startDemo();requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame)})}
+addEventListener('error',e=>{console.error(e.error||e.message);if(!document.querySelector('.scr:not(.hidden)')&&(!G||G.demo))show('#menu')});
 // accès de test (console) : SPORE.sim(secondes)
 window.SPORE={get G(){return G},newGame,sim(sec,step=1/30){for(let t=0;t<sec&&!G.over;t+=step){update(step);if(G.modal)break}return G},score,progress,gain};
 init();
