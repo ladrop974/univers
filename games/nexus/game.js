@@ -2571,7 +2571,8 @@ class Nexus {
   rematch() {
     if (this.mode === "online" && !this.isHost) {
       this.ctx.send("rematch", {});
-      this.panel(`<h2>Revanche demandée</h2><p class="nx-muted">En attente de l'hôte…</p>`);
+      const p = this.panel(`<h2>Revanche demandée</h2><p class="nx-muted">En attente de l'hôte…</p><div class="nx-row"><button data-menu>Retour au menu</button></div>`);
+      p.onclick = (e) => e.target.closest("[data-menu]") && this.ctx.quit();
       return;
     }
     this.newGame((Math.random() * 1e9) >>> 0);
