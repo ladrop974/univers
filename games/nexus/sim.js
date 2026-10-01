@@ -116,9 +116,11 @@ export function recalc(p) {
   p.en = Math.min(p.en, s.en);
 }
 export function sizeOf(p) {
-  if (p.act <= 1) return 9 + 2 * Math.min(p.level, 4);
-  if (p.act === 2) return 20 + 2.2 * clamp(p.level - 3, 0, 4);
-  return Math.min(48, 32 + 1.6 * Math.max(0, p.level - 6));
+  // on grossit sans cesse avec l'énergie absorbée (racine carrée : vite au début, puis plus doucement)
+  const g = Math.sqrt(p.grow || 0);
+  if (p.act <= 1) return Math.min(30, 9 + 2 * Math.min(p.level, 4) + g * 0.35);
+  if (p.act === 2) return Math.min(62, 20 + 2.2 * clamp(p.level - 3, 0, 4) + g * 0.7);
+  return Math.min(120, 32 + 1.6 * Math.max(0, p.level - 6) + g * 1.1);
 }
 export const xpNeed = (lv) => 40 + lv * 42;
 
@@ -296,7 +298,7 @@ export function newPlayer(seat, name, bot) {
   const p = {
     seat, name, bot: bot || null,
     x: s.x, z: s.z, vx: 0, vz: 0, ang: seat ? Math.PI * 1.25 : Math.PI * 0.25,
-    level: 1, xp: 0, act: 1, zen: 0, muts: [], spec: null, picks: [], specPick: false,
+    level: 1, xp: 0, grow: 0, act: 1, zen: 0, muts: [], spec: null, picks: [], specPick: false,
     cd: { atk: 0, dash: 0, abil: 0, wave: 0 }, dashT: 0, inv: 2, hurt: 0, slowT: 0, shieldT: 0, drainT: 0, lungeT: 0, atkT: 0,
     dead: 0, respT: 0, inDuel: 0, adv: 0, frags: 0, story: [], seen: new Set(),
     stat: { res: 0, dmg: 0, zones: 0, kills: 0, deaths: 0 },
@@ -325,6 +327,8 @@ export function createSim(seed, opts = {}) {
     beacons: [],
     ev: [], // événements visuels/sonores, vidés par le rendu
     nutChg: [],
+    orbs: [], // énergie lâchée par les créatures tuées, à absorber
+    orbId: 0,
     duelFirst: -1,
   };
   for (const p of S.players) p.prng = mulberry(seed + 77 * (p.seat + 1));
@@ -379,6 +383,8 @@ export const currentChoices = (p) => (p.specPick ? SPECS.map((s) => s.id) : p.pi
 function gainXp(S, p, xp) {
   if (p.inDuel) return;
   p.xp += xp * p.st.absorb;
+  p.grow = (p.grow || 0) + xp * p.st.absorb;
+  p.r = sizeOf(p);
   while (p.xp >= xpNeed(p.level)) {
     p.xp -= xpNeed(p.level);
     p.level++;
@@ -511,10 +517,55 @@ function hurtNpc(S, n, amount, from, slow) {
     ev(S, "ndie", { x: n.x, z: n.z, r: n.r });
     if (from >= 0) {
       const p = S.players[from];
-      gainXp(S, p, NPC_KINDS[n.kind].xp);
       p.stat.res++;
-      p.en = Math.min(p.maxEn, p.en + 10);
       gainZen(S, p, NPC_KINDS[n.kind].xp * 0.06);
+    }
+    dropOrbs(S, n.x, n.z, NPC_KINDS[n.kind].xp * 1.15, n.r);
+  }
+}
+function dropOrbs(S, x, z, xp, r) {
+  const k = clamp(Math.round(xp / 7), 2, 9),
+    v = xp / k;
+  for (let i = 0; i < k; i++) {
+    const a = S.rand() * Math.PI * 2,
+      sp = 60 + S.rand() * 120;
+    S.orbs.push({ id: ++S.orbId, x: x + Math.cos(a) * r * 0.5, z: z + Math.sin(a) * r * 0.5, vx: Math.cos(a) * sp, vz: Math.sin(a) * sp, v, t: 30 });
+  }
+  if (S.orbs.length > 160) S.orbs.splice(0, S.orbs.length - 160);
+}
+function stepOrbs(S, dt) {
+  for (let i = S.orbs.length - 1; i >= 0; i--) {
+    const o = S.orbs[i];
+    if ((o.t -= dt) <= 0) {
+      S.orbs.splice(i, 1);
+      continue;
+    }
+    let best = null,
+      bd = 1e12;
+    for (const p of S.players) {
+      if (p.dead || p.inDuel) continue;
+      const reach = p.r + 100 + 60 * (p.st.pickup - 1);
+      const d = d2(o.x, o.z, p.x, p.z);
+      if (d < reach * reach && d < bd) (bd = d, (best = p));
+    }
+    if (best) {
+      const d = Math.sqrt(bd) || 1;
+      if (d < best.r + 10) {
+        gainXp(S, best, o.v);
+        best.en = Math.min(best.maxEn, best.en + 3);
+        best.hp = Math.min(best.maxHp, best.hp + 1.5);
+        ev(S, "orb", { x: o.x, z: o.z, seat: best.seat });
+        S.orbs.splice(i, 1);
+        continue;
+      }
+      const sp = 420 * dt;
+      o.x += ((best.x - o.x) / d) * sp;
+      o.z += ((best.z - o.z) / d) * sp;
+    } else {
+      o.x += o.vx * dt;
+      o.z += o.vz * dt;
+      o.vx *= 0.94;
+      o.vz *= 0.94;
     }
   }
 }
@@ -887,6 +938,7 @@ function stepPlayer(S, p, dt) {
 }
 
 function stepWorld(S, dt) {
+  stepOrbs(S, dt);
   for (let i = 0; i < S.nut.length; i++) {
     const n = S.nut[i];
     if (!n.alive && (n.respT -= dt) <= 0) {
@@ -1318,7 +1370,7 @@ function botThink(S, p, dt, frozen) {
 
 /* ============ INSTANTANÉS RÉSEAU ============ */
 const r1 = (v) => Math.round(v * 10) / 10;
-const PK = ["x", "z", "vx", "vz", "ang", "hp", "en", "zen", "xp", "level", "act", "dead", "respT", "inv", "hurt", "slowT", "shieldT", "drainT", "lungeT", "atkT", "dashT", "frags", "inDuel", "adv"];
+const PK = ["x", "z", "vx", "vz", "ang", "hp", "en", "zen", "xp", "level", "act", "dead", "respT", "inv", "hurt", "slowT", "shieldT", "drainT", "lungeT", "atkT", "dashT", "frags", "inDuel", "adv", "grow"];
 export function snapshot(S, forSeat = 1, full = false) {
   const me = S.players[forSeat];
   const P = S.players.map((p) => ({
@@ -1344,6 +1396,7 @@ export function snapshot(S, forSeat = 1, full = false) {
     B: S.beacons.map((b) => [b.x | 0, b.z | 0, b.owner, b.by, Math.round(b.prog * 100) / 100]),
     O: S.over,
     df: S.duelFirst,
+    Q: S.orbs.map((o) => [o.id, o.x | 0, o.z | 0]),
   };
   if (full) out.nut = S.nut.map((x) => x.alive);
   else out.nc = [...new Set(S.nutChg)].map((i) => [i, S.nut[i].alive]);
@@ -1360,6 +1413,7 @@ export function applySnapshot(S, d) {
   if (["world", "prep", "duel", "over"].includes(d.ph)) S.phase = d.ph;
   S.phaseT = num(d.pt, 0, 999);
   S.duelFirst = num(d.df, -1, 1) | 0;
+  if (Array.isArray(d.Q)) S.orbs = d.Q.slice(0, 200).filter(Array.isArray).map((a) => ({ id: a[0] | 0, x: num(a[1], -1e5, 1e5), z: num(a[2], -1e5, 1e5) }));
   (Array.isArray(d.P) ? d.P : []).slice(0, 2).forEach((q, i) => {
     if (!q || !Array.isArray(q.v)) return;
     const p = S.players[i];

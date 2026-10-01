@@ -822,6 +822,15 @@ class Nexus {
     this.halos = new THREE.Points(hg, pointsMat(this.glowTex));
     this.halos.frustumCulled = false;
     G.add(this.halos);
+    // orbes d'énergie lâchés par les créatures tuées
+    this.orbMesh = new THREE.InstancedMesh(
+      new THREE.SphereGeometry(1, 12, 10),
+      new THREE.MeshStandardMaterial({ color: 0x8dfff0, emissive: 0x2affd5, emissiveIntensity: 2.2, roughness: 0.2 }),
+      200,
+    );
+    this.orbMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.orbMesh.frustumCulled = false;
+    G.add(this.orbMesh);
     // spores d'ambiance (autour de la caméra)
     const SP = 2200,
       sg = new THREE.BufferGeometry(),
@@ -1627,8 +1636,9 @@ class Nexus {
       v.joy.sy = lerp(v.joy.sy, iy, Math.min(1, dt * 14));
       const fx = Math.sin(v.yaw),
         fz = Math.cos(v.yaw);
-      const mx = -fz * -v.joy.sx + fx * v.joy.sy,
-        mz = -fx * v.joy.sx + fz * v.joy.sy;
+      // droite de la caméra = (−fz, fx) ; avant = (fx, fz)
+      const mx = -fz * v.joy.sx + fx * v.joy.sy,
+        mz = fx * v.joy.sx + fz * v.joy.sy;
       // visée souris (PC, une seule vue)
       let aim = null;
       if (this.mode !== "local" && this.prefs.mouseAim && performance.now() - this.mouse.t < 2500 && !this.touchOn) {
@@ -1820,6 +1830,10 @@ class Nexus {
           P.emit(e.x, y, e.z, e.kind ? 12 : 5, e.kind ? 0xffd36b : 0xffe08a, 80, 0.4, 9);
           if (mine(e.seat)) this.sound.play("eat");
           break;
+        case "orb":
+          P.emit(e.x, y, e.z, 8, 0x5affe0, 120, 0.5, 10);
+          if (mine(e.seat)) this.sound.play("eat");
+          break;
         case "hit":
           P.emit(e.x, y, e.z, 10, 0xff4466, 160, 0.4, 12);
           this.float(e.x, e.z, "-" + e.v, "#ff6b8a");
@@ -2006,6 +2020,13 @@ class Nexus {
     });
     this.nutMesh.instanceMatrix.needsUpdate = true;
     hc.needsUpdate = true;
+    const orbs = S.orbs || [];
+    for (let i = 0; i < 200; i++) {
+      const o = orbs[i];
+      if (o) this.orbMesh.setMatrixAt(i, m4.compose(v3.set(o.x, heightAt(o.x, o.z) + 16 + Math.sin(time * 4 + o.id) * 4, o.z), q.identity(), s3.setScalar(5 + Math.sin(time * 6 + o.id) * 1.2)));
+      else this.orbMesh.setMatrixAt(i, m4.compose(v3.set(0, -9999, 0), q.identity(), s3.setScalar(0)));
+    }
+    this.orbMesh.instanceMatrix.needsUpdate = true;
     // fragments, relais, flaques
     const vs = this.views.map((v) => v.seat);
     S.frags.forEach((f, i) => {
