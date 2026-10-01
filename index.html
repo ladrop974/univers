@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#0b1026" />
+    <meta name="description" content="Univers : des jeux à plusieurs, en duel par simple lien. Sans compte, sans rien installer." />
+    <title>Univers</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script type="importmap">
+      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+    </script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <header class="top">
+        <h1>🪐 Univers</h1>
+        <span id="conn" class="conn" hidden></span>
+        <button id="btn-chat" class="icon" aria-label="Chat et documents" hidden>💬<i id="chat-badge" hidden></i></button>
+      </header>
+
+      <main id="home">
+        <section class="hero">
+          <p>Des jeux à plusieurs, en duel par simple lien. <b>Sans compte, sans rien installer.</b></p>
+          <label class="pseudo">Ton pseudo <input id="pseudo" maxlength="20" autocomplete="nickname" /></label>
+        </section>
+        <section id="games" class="grid" aria-label="Jeux"></section>
+        <section class="tiers">
+          <h2>Sans clé, tu peux déjà…</h2>
+          <ul>
+            <li>🎮 jouer en duel par lien, seul contre le robot, ou à deux sur le même écran</li>
+            <li>💬 discuter avec ton adversaire</li>
+            <li>📄 lui partager un PDF ou une image (envoyé direct, jamais stocké)</li>
+          </ul>
+          <details>
+            <summary>🔑 Avec ta propre clé (bientôt)</summary>
+            <p>
+              Chacun garde <b>sa clé et son IA</b> : elles restent sur ton appareil. Cela débloquera la création de
+              jeux avec ton IA et l'ajout de tes jeux à ta planète. Rien de ce mode n'est actif pour l'instant.
+            </p>
+          </details>
+        </section>
+      </main>
+
+      <div id="stage" hidden></div>
+      <div id="modal" class="modal" hidden></div>
+
+      <aside id="panel" class="panel" hidden aria-label="Chat et documents">
+        <div class="panel-head">
+          <b>Salon</b><span id="who"></span>
+          <button id="panel-close" class="icon" aria-label="Fermer">✕</button>
+        </div>
+        <ul id="msgs" class="msgs" aria-live="polite"></ul>
+        <ul id="docs" class="docs"></ul>
+        <form id="chat-form" class="chat-form">
+          <input id="chat-input" maxlength="300" placeholder="Écrire un message…" autocomplete="off" />
+          <button type="submit">Envoyer</button>
+        </form>
+        <label class="file-btn">📎 Partager un PDF ou une image
+          <input id="file" type="file" accept="application/pdf,image/png,image/jpeg,image/webp,image/gif" hidden />
+        </label>
+      </aside>
+
+      <div id="viewer" class="viewer" hidden></div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+    <noscript>Univers a besoin de JavaScript pour fonctionner.</noscript>
+  </body>
+</html>

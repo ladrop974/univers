@@ -1,0 +1,18 @@
+[
+  {
+    "id": "poules",
+    "name": "Poules Armageddon",
+    "tagline": "Duel d'artillerie en 3D : 3 poules contre 3 poules, œufs explosifs",
+    "emoji": "🐔",
+    "modes": ["bot", "local", "online"],
+    "players": "1 à 2 joueurs"
+  },
+  {
+    "id": "morpion",
+    "name": "Morpion",
+    "tagline": "Le classique, en duel",
+    "emoji": "❌",
+    "modes": ["bot", "local", "online"],
+    "players": "1 à 2 joueurs"
+  }
+]
