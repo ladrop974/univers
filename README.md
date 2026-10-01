@@ -5,6 +5,11 @@ Des jeux à plusieurs, en duel **par simple lien** : sans compte, sans rien inst
 **Jouer : https://ladrop974.github.io/univers/**
 
 ## Ce qui marche aujourd'hui
+- **NEXUS : Lignée Zénith** (3D) : roguelite évolutif. Une graine absorbe, mute (bonus + coût à chaque niveau),
+  conquiert des relais, choisit une spécialisation, puis affronte l'autre lignée au Duel Zénith (KO, 3 balises ou
+  majorité). Solo contre un robot (3 difficultés), écran partagé à deux, ou duel en ligne par lien.
+  Qualité graphique réglable (Bas → Ultra, lueurs, ombres), **toutes les touches se changent** (⚙ Options),
+  manette, visée à la souris, commandes tactiles sur téléphone.
 - **Poules Armageddon** (3D) : 3 poules contre 3 poules, œufs explosifs, terrain destructible, vent.
   Solo contre la poule robot, duel sur le même écran, ou duel en ligne par lien.
 - **Morpion** : solo, même écran ou en ligne.
@@ -26,7 +31,7 @@ l'état complet à la fin du tour.
 ## Développer
 ```bash
 python -m http.server 8092        # puis http://localhost:8092
-node --test tests/sim.test.mjs    # règles du jeu (9 tests)
+node --test tests/sim.test.mjs tests/nexus.test.mjs   # règles des jeux
 ```
 Pas de compilation : des fichiers statiques. Hébergement : GitHub Pages.
 Dépendances chargées depuis un CDN : Three.js (3D) et PeerJS (réseau).
