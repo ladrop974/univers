@@ -603,7 +603,7 @@ class Nexus {
     R.toneMapping = THREE.ACESFilmicToneMapping;
     R.toneMappingExposure = 1.15;
     R.outputColorSpace = THREE.SRGBColorSpace;
-    R.shadowMap.type = THREE.PCFSoftShadowMap;
+    R.shadowMap.type = THREE.PCFShadowMap;
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.Fog(0x04131d, 300, 1400);
     this.scene.background = new THREE.Color(0x04131d);
@@ -638,7 +638,7 @@ class Nexus {
   }
   get Q() {
     let q = this.prefs.quality;
-    if (q === "auto") q = this.autoQ ?? (matchMedia("(pointer: coarse)").matches ? 1 : 2);
+    if (q === "auto") q = this.autoQ ?? (matchMedia("(pointer: coarse)").matches ? 0 : 1);
     const base = QUALITY[q];
     return this.prefs.effects ? base : { ...base, bloom: 0, parts: 50, spores: Math.min(base.spores, 300) };
   }
@@ -646,6 +646,7 @@ class Nexus {
     if (!this.renderer) return;
     const Q = this.Q;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, Q.dpr));
+    const shadowChanged = this.renderer.shadowMap.enabled !== !!Q.shadow;
     this.renderer.shadowMap.enabled = !!Q.shadow;
     this.sun.castShadow = !!Q.shadow;
     if (Q.shadow) {
@@ -653,7 +654,7 @@ class Nexus {
       this.sun.shadow.map?.dispose();
       this.sun.shadow.map = null;
     }
-    this.scene.traverse((o) => o.material && (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => (m.needsUpdate = true)));
+    if (shadowChanged) this.scene.traverse((o) => o.material && (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => (m.needsUpdate = true)));
     if (this.parts && this.parts.max !== Q.parts) {
       this.scene.remove(this.parts.pts);
       this.parts.geo.dispose();
@@ -1794,11 +1795,11 @@ class Nexus {
   fps(dt) {
     if (this.prefs.quality !== "auto" || !this.S || this.autoLocked) return;
     this.fpsLog.push(dt);
-    if (this.fpsLog.length >= 120) {
+    if (this.fpsLog.length >= 60) {
       const avg = this.fpsLog.reduce((a, b) => a + b, 0) / this.fpsLog.length;
       this.fpsLog.length = 0;
-      const q = this.autoQ ?? (matchMedia("(pointer: coarse)").matches ? 1 : 2);
-      if (avg > 1 / 40 && q > 0) {
+      const q = this.autoQ ?? (matchMedia("(pointer: coarse)").matches ? 0 : 1);
+      if (avg > 1 / 45 && q > 0) {
         this.autoQ = q - 1;
         this.applyQuality();
       } else if (avg < 1 / 58 && q < 2 && !this.raised) {
@@ -2271,8 +2272,7 @@ class Nexus {
     const S = this.S;
     const now = performance.now();
     for (const v of this.views) {
-      const p = S.players[v.seat],
-        st = p.st;
+      const p = S.players[v.seat];
       v.q(".nx-lv").textContent = `Niv ${p.level} · ${S.phase === "world" ? N.ACTS[p.act].split(" — ")[1] : "Duel Zénith"}`;
       const bar = (cls, val, max, label) => {
         const b = v.q(".nx-bar." + cls);

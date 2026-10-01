@@ -108,7 +108,7 @@ class Poules {
     const touch = matchMedia("(pointer: coarse)").matches;
     this.touch = touch;
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: !touch, powerPreference: "high-performance" });
-    this.ratio = Math.min(window.devicePixelRatio || 1, touch ? 1.5 : 2);
+    this.ratio = Math.min(window.devicePixelRatio || 1, touch ? 1.25 : 1.5);
     this.renderer.setPixelRatio(this.ratio);
     const scene = (this.scene = new THREE.Scene());
     scene.background = new THREE.Color(0x8fd0ff);
@@ -708,7 +708,7 @@ class Poules {
       const fps = this.fpsN / this.fpsT;
       this.fpsT = 0;
       this.fpsN = 0;
-      if (fps < 40 && this.ratio > 0.75) {
+      if (fps < 45 && this.ratio > 0.75) {
         this.ratio = Math.max(0.75, this.ratio * 0.8); // fluidité d'abord : moins de pixels
         this.resize();
       }
