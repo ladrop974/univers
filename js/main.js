@@ -92,6 +92,10 @@ async function init() {
 }
 
 function chooseMode(g) {
+  if (g.href) {
+    window.open(g.href, "_blank", "noopener");
+    return;
+  }
   const modes = g.modes || ["local"];
   const labels = {
     bot: ["🤖 Solo", g.id === "poules" ? "Contre la poule robot" : "Contre l'ordinateur"],
@@ -240,7 +244,15 @@ async function openWorld(id) {
   stage.hidden = false;
   stage.classList.add("is-world");
   stage.innerHTML = "";
-  world = mod.open(stage, { quit: closeWorld });
+  world = mod.open(stage, {
+    quit: closeWorld,
+    games,
+    playGame: (gid) => {
+      closeWorld();
+      const g = games.find((x) => x.id === gid);
+      if (g) chooseMode(g);
+    },
+  });
 }
 function closeWorld() {
   try {

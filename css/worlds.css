@@ -1,7 +1,7 @@
 /* planètes */
 .galaxy h2, .games-h { font-size: 1.05rem; margin: 18px 0 4px; }
-#galaxy { display: block; width: 100%; height: 420px; touch-action: manipulation; }
-@media (max-width: 599px) { #galaxy { height: 780px; } }
+#galaxy { display: block; width: 100%; height: 760px; touch-action: manipulation; }
+@media (max-width: 599px) { #galaxy { height: 1100px; } }
 .worlds-nav { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 8px; }
 .worlds-nav button { flex: 1 1 150px; min-height: 44px; background: #151c3b; border: 1px solid var(--wc); border-radius: 12px; padding: 8px 12px; font-weight: 600; }
 .worlds-nav button:hover { background: color-mix(in srgb, var(--wc) 22%, #151c3b); }

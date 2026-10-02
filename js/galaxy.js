@@ -3,6 +3,7 @@ export const WORLDS = [
   { id: "radio", name: "Fréquence Orion", tag: "Radios du monde", emoji: "📡", color: "#38bdf8" },
   { id: "library", name: "Bibliotheca Nova", tag: "Livres et archives", emoji: "📚", color: "#a78bfa" },
   { id: "terra", name: "Observatoire Terra", tag: "Météo, séismes, Station", emoji: "🌍", color: "#34d399" },
+  { id: "games", name: "Arcadia Prime", tag: "Jeux : Soluniariens et le monde", emoji: "🎮", color: "#f472b6" },
 ];
 
 export function mountGalaxy(cv, onOpen) {
@@ -17,10 +18,10 @@ export function mountGalaxy(cv, onOpen) {
     cv.width = Math.max(1, W * D);
     cv.height = Math.max(1, H * D);
     const narrow = W < 600;
-    const R = narrow ? Math.min(W * 0.19, 76) : Math.min(W * 0.115, 112, H * 0.28);
+    const R = narrow ? Math.min(W * 0.18, 70) : Math.min(W * 0.14, 108);
     pos = narrow
-      ? [[0.5, 0.16], [0.5, 0.48], [0.5, 0.78]].map(([x, y]) => ({ x: x * W, y: y * H, R }))
-      : [[0.18, 0.5], [0.5, 0.44], [0.82, 0.54]].map(([x, y]) => ({ x: x * W, y: y * H, R }));
+      ? [[0.5, 0.12], [0.5, 0.37], [0.5, 0.62], [0.5, 0.87]].map(([x, y]) => ({ x: x * W, y: y * H, R }))
+      : [[0.27, 0.23], [0.73, 0.26], [0.27, 0.75], [0.73, 0.72]].map(([x, y]) => ({ x: x * W, y: y * H, R }));
   };
   fit();
   const ro = new ResizeObserver(fit);
@@ -225,7 +226,33 @@ export function mountGalaxy(cv, onOpen) {
     g.fillRect(ix + 6, iy - 3, 3, 6);
   }
 
-  const draw = [radio, library, terra];
+  function arcade(x, y, R, s) {
+    ball(x, y, R, "#fbcfe8", "#db2777", "#4a0d2f");
+    const px = Math.max(2, Math.round(R / 7));
+    g.fillStyle = "rgba(255,255,255,.9)";
+    ["0110110", "1111111", "1011101", "0111110", "0100010"].forEach((row, j) =>
+      [...row].forEach((c, i) => c === "1" && g.fillRect(x - 3.5 * px + i * px, y - 2.5 * px + j * px + Math.sin(s * 3) * 1.5, px - 1, px - 1)),
+    );
+    for (let i = 0; i < 8; i++) {
+      const a = s * 0.55 + (i / 8) * 6.283, rx = R * 1.75, ry = R * 0.4;
+      const bx = x + Math.cos(a) * rx, by = y + Math.sin(a) * ry;
+      g.globalAlpha = Math.sin(a) > 0 ? 1 : 0.45;
+      g.fillStyle = `hsl(${i * 45} 80% 65%)`;
+      if (i % 2) {
+        g.fillRect(bx - 9, by - 5, 18, 10);
+        g.fillStyle = "#111";
+        g.fillRect(bx - 6, by - 1, 5, 2);
+        g.fillRect(bx - 4, by - 3, 1, 6);
+      } else {
+        g.beginPath();
+        g.arc(bx, by, 6, 0, 7);
+        g.fill();
+      }
+    }
+    g.globalAlpha = 1;
+  }
+
+  const draw = [radio, library, terra, arcade];
   const frame = (t) => {
     const s = t / 1000;
     g.setTransform(D, 0, 0, D, 0, 0);
