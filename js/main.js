@@ -1,5 +1,6 @@
 // Salon d'Univers : choix du jeu, création/ouverture d'une salle par lien, chat, partage de documents.
 import { Room, FILE_TYPES, MAX_FILE } from "./net.js";
+import { WORLDS, mountGalaxy } from "./galaxy.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -72,6 +73,12 @@ async function init() {
     const b = e.target.closest(".game");
     if (b) chooseMode(games.find((g) => g.id === b.dataset.id));
   };
+  $("#worlds-nav").innerHTML = WORLDS.map((w) => `<button type="button" data-w="${w.id}" style="--wc:${w.color}">${w.emoji} ${esc(w.name)}</button>`).join("");
+  $("#worlds-nav").onclick = (e) => {
+    const b = e.target.closest("button");
+    if (b) openWorld(b.dataset.w);
+  };
+  stopGalaxy = mountGalaxy($("#galaxy"), openWorld);
   $("#btn-chat").onclick = () => togglePanel(true);
   $("#panel-close").onclick = () => togglePanel(false);
   $("#chat-form").onsubmit = (e) => {
@@ -211,6 +218,43 @@ function updateConn() {
     c.textContent = `🟢 Salle ${room.code} · ${room.players.length} joueur${room.players.length > 1 ? "s" : ""}`;
     $("#who").textContent = room.players.map((p) => p.name).join(", ");
   }
+}
+
+/* ---------- planètes ---------- */
+let stopGalaxy = null;
+let world = null;
+async function openWorld(id) {
+  if (world) return;
+  let mod;
+  try {
+    mod = await import(`./worlds/${id}.js`);
+  } catch (e) {
+    console.error(e);
+    return toast("Cette planète n'a pas pu se charger.");
+  }
+  stopGame(false);
+  $("#home").hidden = true;
+  stopGalaxy?.();
+  stopGalaxy = null;
+  const stage = $("#stage");
+  stage.hidden = false;
+  stage.classList.add("is-world");
+  stage.innerHTML = "";
+  world = mod.open(stage, { quit: closeWorld });
+}
+function closeWorld() {
+  try {
+    world?.destroy?.();
+  } catch (e) {
+    console.error(e);
+  }
+  world = null;
+  const stage = $("#stage");
+  stage.hidden = true;
+  stage.classList.remove("is-world");
+  stage.innerHTML = "";
+  $("#home").hidden = false;
+  stopGalaxy = mountGalaxy($("#galaxy"), openWorld);
 }
 
 /* ---------- lancement d'un jeu ---------- */

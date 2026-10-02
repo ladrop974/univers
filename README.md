@@ -5,6 +5,7 @@ Des jeux à plusieurs, en duel **par simple lien** : sans compte, sans rien inst
 **Jouer : https://ladrop974.github.io/univers/**
 
 ## Ce qui marche aujourd'hui
+- **Planètes** (grandes, animées, sur l'accueil) : **📡 Fréquence Orion** (radios du monde, Radio Browser), **📚 Bibliotheca Nova** (livres, Open Library + lecture Internet Archive), **🌍 Observatoire Terra** (météo Open-Meteo, séismes USGS, Station spatiale, globe jour/nuit). Toutes les API sont gratuites et sans clé ; code dans `js/worlds/`.
 - **NEXUS : Lignée Zénith** (3D) : roguelite évolutif. Une graine absorbe, mute (bonus + coût à chaque niveau),
   conquiert des relais, choisit une spécialisation, puis affronte l'autre lignée au Duel Zénith (KO, 3 balises ou
   majorité). Solo contre un robot (3 difficultés), écran partagé à deux, ou duel en ligne par lien.
