@@ -1,15 +1,13 @@
 // Planète JEUX « Arcadia Prime » : les jeux faits par des Soluniariens, puis le reste du monde du jeu.
-// Données : catalogue d'Univers (games/index.json), Free-to-Game (gratuit, sans clé) et RAWG (clé gratuite à coller).
+// Données : catalogue d'Univers (games/index.json), Free-to-Game et GamerPower (gratuits, sans clé).
 import { esc, store, getJSON, shell } from "./common.js";
 
 const F2P = "https://www.freetogame.com/api/games?sort-by=popularity";
-const RAWG = "https://api.rawg.io/api/games";
-const RAWG_GENRES = [["", "Tous"], ["action", "Action"], ["adventure", "Aventure"], ["role-playing-games-rpg", "RPG"], ["strategy", "Stratégie"], ["shooter", "Tir"], ["puzzle", "Réflexion"], ["racing", "Course"], ["sports", "Sport"], ["indie", "Indé"]];
 
 export function open(root, { quit, playGame, games = [] }) {
   const ui = shell(root, { title: "Arcadia Prime", sub: "Tous les mondes du jeu", accent: "#f472b6", quit });
   const st = store("games");
-  let tab = ["sol", "f2p", "rawg"].includes(st.get("tab", "sol")) ? st.get("tab", "sol") : "sol";
+  let tab = ["sol", "f2p", "gift"].includes(st.get("tab", "sol")) ? st.get("tab", "sol") : "sol";
   let dead = false;
   const cache = {};
 
@@ -18,7 +16,7 @@ export function open(root, { quit, playGame, games = [] }) {
     <div class="rd-tabs gm-tabs" id="gm-tabs">
       <button data-t="sol" type="button">🧑‍🚀 Soluniariens</button>
       <button data-t="f2p" type="button">🆓 Free-to-Game</button>
-      <button data-t="rawg" type="button">🎲 RAWG</button>
+      <button data-t="gift" type="button">🎁 Jeux offerts</button>
     </div>
     <section id="gm-view"></section>
     <div class="lb-modal" id="gm-modal" hidden></div>`;
@@ -45,7 +43,7 @@ export function open(root, { quit, playGame, games = [] }) {
     tab = t;
     st.set("tab", t);
     for (const b of $("#gm-tabs").children) b.classList.toggle("on", b.dataset.t === t);
-    ({ sol, f2p, rawg })[t]?.();
+    ({ sol, f2p, gift: gifts })[t]?.();
   }
 
   /* ---------- 1. Créés par des Soluniariens ---------- */
@@ -119,76 +117,52 @@ export function open(root, { quit, playGame, games = [] }) {
     draw();
   }
 
-  /* ---------- 3. RAWG (clé gratuite) ---------- */
-  async function rawg() {
-    let key = st.get("rawgKey", "");
-    if (!key) {
-      view().innerHTML = `<h3>RAWG : 500 000 jeux</h3>
-        <p class="muted">RAWG demande une clé gratuite (1 minute, sur <a href="https://rawg.io/apidocs" target="_blank" rel="noopener noreferrer">rawg.io/apidocs</a>). Colle-la ici : elle reste sur ton appareil et n'est envoyée qu'à RAWG.</p>
-        <form class="rd-search" id="r-key"><input id="r-k" placeholder="Ta clé RAWG" autocomplete="off" spellcheck="false" /><button type="submit">Enregistrer</button></form>`;
-      $("#r-key").onsubmit = (e) => {
-        e.preventDefault();
-        const k = $("#r-k").value.trim();
-        if (!/^[A-Za-z0-9]{16,64}$/.test(k)) return ui.toast("Cette clé n'a pas le bon format.");
-        st.set("rawgKey", k);
-        rawg();
-      };
-      return;
-    }
-    let genre = "", text = "", page = 1;
-    view().innerHTML = `<h3>RAWG : 500 000 jeux</h3>
-      <form class="rd-search"><input id="r-q" placeholder="Chercher un jeu…" autocomplete="off" /><button type="submit">Chercher</button></form>
-      <div class="chips" id="r-genres"></div><div class="rd-status muted" id="r-status"></div>
-      <div class="gm-grid" id="r-grid"></div><button class="lb-more" id="r-more" type="button" hidden>Voir la suite</button>
-      <p class="muted">Données <a href="https://rawg.io" target="_blank" rel="noopener noreferrer">RAWG</a> · <button type="button" class="gm-link" id="r-reset">Changer de clé</button></p>`;
-    $("#r-genres").innerHTML = RAWG_GENRES.map(([v, l]) => `<button type="button" data-v="${v}" class="${v === "" ? "on" : ""}">${l}</button>`).join("");
-    async function go(append) {
-      $("#r-status").textContent = "Recherche…";
-      const p = new URLSearchParams({ key, page_size: "24", page: String(page), ordering: text ? "-relevance" : "-added" });
-      if (text) p.set("search", text);
-      if (genre) p.set("genres", genre);
+  /* ---------- 3. Jeux offerts (GamerPower, sans clé) ---------- */
+  async function gifts() {
+    let platform = "", kind = "game";
+    view().innerHTML = `<h3>Jeux offerts</h3><p class="muted">Les jeux et bonus gratuits du moment (Steam, Epic, GOG, consoles, mobile). Des offres à durée limitée, mises à jour en continu.</p>
+      <div class="chips" id="g-kind"></div><div class="chips" id="g-plat"></div>
+      <div class="rd-status muted" id="g-status">Chargement…</div><div class="gm-grid" id="g-grid"></div>
+      <p class="muted">Données <a href="https://www.gamerpower.com" target="_blank" rel="noopener noreferrer">GamerPower</a></p>`;
+    $("#g-kind").innerHTML = [["game", "Jeux complets"], ["loot", "Bonus (DLC, objets)"], ["beta", "Bêtas"]]
+      .map(([v, l]) => `<button type="button" data-v="${v}" class="${v === kind ? "on" : ""}">${l}</button>`).join("");
+    $("#g-plat").innerHTML = [["", "Toutes plateformes"], ["pc", "PC"], ["steam", "Steam"], ["epic-games-store", "Epic"], ["gog", "GOG"], ["ps5", "PS5"], ["xbox-series-xs", "Xbox"], ["android", "Android"], ["ios", "iOS"]]
+      .map(([v, l]) => `<button type="button" data-v="${v}" class="${v === platform ? "on" : ""}">${l}</button>`).join("");
+    async function go() {
+      $("#g-status").textContent = "Chargement…";
+      $("#g-grid").innerHTML = "";
+      const p = new URLSearchParams({ type: kind, "sort-by": "popularity" });
+      if (platform) p.set("platform", platform);
       try {
-        const d = await getJSON(`${RAWG}?${p}`, 20000);
-        if (dead || tab !== "rawg") return;
-        $("#r-status").textContent = `${d.count.toLocaleString("fr-FR")} jeux`;
-        const html = d.results
-          .map((g) => `<a class="gm-card" href="https://rawg.io/games/${esc(g.slug)}" target="_blank" rel="noopener noreferrer">
-            ${g.background_image ? `<img src="${esc(g.background_image)}" alt="" loading="lazy" />` : ""}<b>${esc(g.name)}</b>
-            <small>${g.rating ? "★ " + g.rating.toFixed(1) + " · " : ""}${esc(g.released || "")}</small><em>${esc((g.genres || []).slice(0, 3).map((x) => x.name).join(", "))}</em></a>`)
+        const d = await getJSON(`https://www.gamerpower.com/api/giveaways?${p}`, 20000);
+        if (dead || tab !== "gift") return;
+        const rows = Array.isArray(d) ? d : [];
+        $("#g-status").textContent = rows.length ? `${rows.length} offres en cours` : "Aucune offre pour le moment sur cette plateforme.";
+        $("#g-grid").innerHTML = rows
+          .map((o) => `<a class="gm-card" href="${esc(o.gamerpower_url)}" target="_blank" rel="noopener noreferrer">
+            <img src="${esc(o.thumbnail)}" alt="" loading="lazy" /><b>${esc(o.title.replace(/\s*\(?giveaway\)?$/i, ""))}</b>
+            <small>${esc(o.description)}</small>
+            <em>${o.worth && o.worth !== "N/A" ? "Valeur " + esc(o.worth) + " · " : ""}${esc(o.platforms)}${o.end_date && o.end_date !== "N/A" ? " · jusqu'au " + esc(o.end_date.slice(0, 10)) : ""}</em></a>`)
           .join("");
-        $("#r-grid").insertAdjacentHTML(append ? "beforeend" : "afterbegin", html);
-        $("#r-more").hidden = !d.next;
-      } catch (e) {
-        if (dead || tab !== "rawg") return;
-        const bad = /401|403/.test(String(e.message));
-        $("#r-status").textContent = bad ? "Clé refusée par RAWG : vérifie-la (« Changer de clé »)." : "RAWG ne répond pas. Réessaie dans un instant.";
+      } catch {
+        if (!dead && tab === "gift") $("#g-status").textContent = "Le service d'offres ne répond pas. Réessaie dans un instant.";
       }
     }
-    $("#r-genres").onclick = (e) => {
+    $("#g-kind").onclick = (e) => {
       const b = e.target.closest("button");
       if (!b) return;
-      genre = b.dataset.v;
-      for (const x of $("#r-genres").children) x.classList.toggle("on", x.dataset.v === genre);
-      page = 1;
-      $("#r-grid").innerHTML = "";
-      go(false);
+      kind = b.dataset.v;
+      for (const x of $("#g-kind").children) x.classList.toggle("on", x.dataset.v === kind);
+      go();
     };
-    view().querySelector("form").onsubmit = (e) => {
-      e.preventDefault();
-      text = $("#r-q").value.trim();
-      page = 1;
-      $("#r-grid").innerHTML = "";
-      go(false);
+    $("#g-plat").onclick = (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      platform = b.dataset.v;
+      for (const x of $("#g-plat").children) x.classList.toggle("on", x.dataset.v === platform);
+      go();
     };
-    $("#r-more").onclick = () => {
-      page++;
-      go(true);
-    };
-    $("#r-reset").onclick = () => {
-      st.set("rawgKey", "");
-      rawg();
-    };
-    go(false);
+    go();
   }
 
   /* ---------- planète animée : manettes et invaders en orbite ---------- */
