@@ -17,6 +17,9 @@ Des jeux à plusieurs, en duel **par simple lien** : sans compte, sans rien inst
 - **Chat** et **partage de PDF / images** pendant un duel (envoi direct d'un joueur à l'autre, rien n'est stocké).
 - **Ajouter un jeu** : un dossier + une ligne (voir `docs/AJOUTER_UN_JEU.md`).
 
+## Émulateur (salle d'arcade)
+`emulator.html` est un lecteur EmulatorJS isolé, utilisé par SolunIA Network : la ROM arrive par message du navigateur (jamais envoyée à un serveur). Aucune ROM n'est fournie ici.
+
 ## Comment ça marche
 Le duel en ligne est en **pair-à-pair** (WebRTC via PeerJS) : aucun serveur à toi, rien à payer. Le créateur de la
 salle est l'hôte ; l'autre joueur ouvre le lien. Dans Poules Armageddon, le tireur fait foi : il envoie son tir, puis

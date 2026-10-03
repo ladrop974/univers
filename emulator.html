@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Émulateur</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #04061a; color: #cbd5e1; font: 15px/1.4 system-ui, sans-serif; overflow: hidden; }
+      #game { width: 100%; height: 100%; }
+      #msg { position: fixed; inset: 0; display: grid; place-items: center; text-align: center; padding: 20px; pointer-events: none; }
+      #msg b { display: block; font-size: 1.1rem; margin-bottom: 4px; color: #22d3ee; }
+    </style>
+  </head>
+  <body>
+    <div id="msg"><div><b>Salle d'arcade</b>Choisis un jeu dans ta bibliothèque pour le lancer ici.</div></div>
+    <div id="game"></div>
+    <script>
+      /*
+       * Lecteur d'émulateur isolé (EmulatorJS). Il vit sur un autre site que SolunIA Network : le code de l'émulateur
+       * ne peut donc jamais toucher aux données de l'application. La ROM n'est PAS envoyée sur un serveur : elle arrive
+       * par un message direct du navigateur (postMessage) ou, pour un test, par ?rom=<adresse>&core=<console>.
+       */
+      var CDN = "https://cdn.emulatorjs.org/stable/data/";
+      var started = false;
+      var msg = document.getElementById("msg");
+      function okOrigin(o) {
+        try {
+          var u = new URL(o);
+          return (
+            u.hostname === "solunia-network.lovable.app" ||
+            /(^|\.)lovable\.app$/.test(u.hostname) ||
+            u.hostname === "localhost" ||
+            u.hostname === "127.0.0.1" ||
+            u.hostname === "ladrop974.github.io"
+          );
+        } catch (e) {
+          return false;
+        }
+      }
+      function say(t) {
+        msg.innerHTML = "<div><b>" + t.title + "</b>" + (t.text || "") + "</div>";
+        msg.style.display = "grid";
+      }
+      function start(bytes, name, core) {
+        if (started) return;
+        started = true;
+        msg.style.display = "none";
+        var url = URL.createObjectURL(new Blob([bytes]));
+        window.EJS_player = "#game";
+        window.EJS_core = core;
+        window.EJS_gameUrl = url;
+        window.EJS_gameName = (name || "jeu").replace(/\.[^.]+$/, "");
+        window.EJS_pathtodata = CDN;
+        window.EJS_startOnLoaded = true;
+        window.EJS_color = "#22d3ee";
+        window.EJS_backgroundColor = "#04061a";
+        var s = document.createElement("script");
+        s.src = CDN + "loader.js";
+        s.onerror = function () {
+          started = false;
+          say({ title: "Émulateur indisponible", text: "Impossible de charger le moteur d'émulation. Vérifie ta connexion." });
+        };
+        document.body.appendChild(s);
+      }
+      window.addEventListener("message", function (e) {
+        if (!okOrigin(e.origin)) return;
+        var d = e.data;
+        if (d && d.type === "rom" && d.bytes && typeof d.core === "string" && /^[A-Za-z0-9]{2,12}$/.test(d.core)) start(d.bytes, String(d.name || "jeu"), d.core);
+      });
+      var q = new URLSearchParams(location.search);
+      if (q.get("rom") && q.get("core")) {
+        say({ title: "Chargement…" });
+        fetch(q.get("rom"))
+          .then(function (r) {
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.arrayBuffer();
+          })
+          .then(function (b) {
+            start(b, q.get("rom").split("/").pop(), q.get("core"));
+          })
+          .catch(function () {
+            say({ title: "Jeu introuvable", text: "Le fichier n'a pas pu être chargé." });
+          });
+      } else if (window.parent !== window) {
+        window.parent.postMessage({ type: "ready" }, "*");
+      }
+    </script>
+  </body>
+</html>
