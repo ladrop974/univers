@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/worlds.css" />
     <link rel="stylesheet" href="css/games.css" />
+    <link rel="stylesheet" href="css/space.css" />
     <script type="importmap">
       { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
     </script>
@@ -18,9 +19,9 @@
   <body>
     <div id="app">
       <header class="top">
-        <h1>🪐 Univers</h1>
+        <h1><span class="gi" data-gl="planet" data-s="24"></span> Univers</h1>
         <span id="conn" class="conn" hidden></span>
-        <button id="btn-chat" class="icon" aria-label="Chat et documents" hidden>💬<i id="chat-badge" hidden></i></button>
+        <button id="btn-chat" class="icon" aria-label="Chat et documents" hidden><span class="gi" data-gl="chat" data-s="18"></span><i id="chat-badge" hidden></i></button>
       </header>
 
       <main id="home">
@@ -28,22 +29,30 @@
           <p>Des jeux à plusieurs, en duel par simple lien. <b>Sans compte, sans rien installer.</b></p>
           <label class="pseudo">Ton pseudo <input id="pseudo" maxlength="20" autocomplete="nickname" /></label>
         </section>
+        <section class="orbit-sec" aria-label="Mon système">
+          <div class="orbit-head"><h2>Mon système</h2></div>
+          <canvas id="orbit"></canvas>
+          <div class="orbit-cta">
+            <button type="button" class="sp-btn primary" id="btn-create">Créer ma planète</button>
+            <button type="button" class="sp-btn" id="btn-atelier">Atelier : mes planètes, outils, profil</button>
+          </div>
+        </section>
         <section class="galaxy" aria-label="Planètes">
-          <h2>🌌 Les planètes</h2>
+          <h2><span class="gi" data-gl="globe" data-s="20"></span> Les planètes</h2>
           <canvas id="galaxy" aria-hidden="true"></canvas>
           <div class="worlds-nav" id="worlds-nav"></div>
         </section>
-        <h2 class="games-h">🎮 Les jeux</h2>
+        <h2 class="games-h"><span class="gi" data-gl="gamepad" data-s="20"></span> Les jeux</h2>
         <section id="games" class="grid" aria-label="Jeux"></section>
         <section class="tiers">
           <h2>Sans clé, tu peux déjà…</h2>
           <ul>
-            <li>🎮 jouer en duel par lien, seul contre le robot, ou à deux sur le même écran</li>
-            <li>💬 discuter avec ton adversaire</li>
-            <li>📄 lui partager un PDF ou une image (envoyé direct, jamais stocké)</li>
+            <li><span class="gi" data-gl="gamepad" data-s="16"></span> jouer en duel par lien, seul contre le robot, ou à deux sur le même écran</li>
+            <li><span class="gi" data-gl="chat" data-s="16"></span> discuter avec ton adversaire</li>
+            <li><span class="gi" data-gl="file" data-s="16"></span> lui partager un PDF ou une image (envoyé direct, jamais stocké)</li>
           </ul>
           <details>
-            <summary>🔑 Avec ta propre clé (bientôt)</summary>
+            <summary><span class="gi" data-gl="key" data-s="16"></span> Avec ta propre clé (bientôt)</summary>
             <p>
               Chacun garde <b>sa clé et son IA</b> : elles restent sur ton appareil. Cela débloquera la création de
               jeux avec ton IA et l'ajout de tes jeux à ta planète. Rien de ce mode n'est actif pour l'instant.
@@ -58,7 +67,7 @@
       <aside id="panel" class="panel" hidden aria-label="Chat et documents">
         <div class="panel-head">
           <b>Salon</b><span id="who"></span>
-          <button id="panel-close" class="icon" aria-label="Fermer">✕</button>
+          <button id="panel-close" class="icon" aria-label="Fermer"><span class="gi" data-gl="close" data-s="18"></span></button>
         </div>
         <ul id="msgs" class="msgs" aria-live="polite"></ul>
         <ul id="docs" class="docs"></ul>
@@ -66,7 +75,7 @@
           <input id="chat-input" maxlength="300" placeholder="Écrire un message…" autocomplete="off" />
           <button type="submit">Envoyer</button>
         </form>
-        <label class="file-btn">📎 Partager un PDF ou une image
+        <label class="file-btn"><span class="gi" data-gl="clip" data-s="16"></span> Partager un PDF ou une image
           <input id="file" type="file" accept="application/pdf,image/png,image/jpeg,image/webp,image/gif" hidden />
         </label>
       </aside>

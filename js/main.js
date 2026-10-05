@@ -1,8 +1,15 @@
 // Salon d'Univers : choix du jeu, création/ouverture d'une salle par lien, chat, partage de documents.
 import { Room, FILE_TYPES, MAX_FILE } from "./net.js";
 import { WORLDS, mountGalaxy } from "./galaxy.js";
+import { glyph } from "./glyphs.js";
+import { decodePlanet } from "./policy.js";
+import { THEME_IDS } from "./catalog.js";
+import { isKnownModule } from "./modules.js";
+import { mountOrbit } from "./orbit.js";
+import { loadPlanets, profile } from "./myplanets.js";
 
 const $ = (s) => document.querySelector(s);
+const hydrateGlyphs = (root = document) => root.querySelectorAll("[data-gl]").forEach((el) => (el.innerHTML = glyph(el.dataset.gl, Number(el.dataset.s) || 18)));
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 let games = [];
@@ -27,6 +34,13 @@ const getName = () => {
     /* stockage bloqué */
   }
   return n || "Joueur" + Math.floor(100 + Math.random() * 900);
+};
+const getStoredName = () => {
+  try {
+    return localStorage.getItem("univers.name");
+  } catch {
+    return null;
+  }
 };
 function saveName(n) {
   try {
@@ -54,6 +68,7 @@ function closeModal(cb) {
 
 /* ---------- accueil ---------- */
 async function init() {
+  hydrateGlyphs();
   $("#pseudo").value = getName();
   $("#pseudo").onchange = () => saveName($("#pseudo").value.trim());
   try {
@@ -65,7 +80,7 @@ async function init() {
   $("#games").innerHTML = games
     .map(
       (g) => `<button class="game" data-id="${esc(g.id)}">
-        <span class="emo">${esc(g.emoji || "🎮")}</span>
+        <span class="emo">${glyph(g.glyph || "gamepad", 30)}</span>
         <b>${esc(g.name)}</b><small>${esc(g.tagline || "")}</small><em>${esc(g.players || "")}</em></button>`,
     )
     .join("");
@@ -73,12 +88,16 @@ async function init() {
     const b = e.target.closest(".game");
     if (b) chooseMode(games.find((g) => g.id === b.dataset.id));
   };
-  $("#worlds-nav").innerHTML = WORLDS.map((w) => `<button type="button" data-w="${w.id}" style="--wc:${w.color}">${w.emoji} ${esc(w.name)}</button>`).join("");
+  $("#worlds-nav").innerHTML =
+    WORLDS.map((w) => `<button type="button" data-w="${w.id}" style="--wc:${w.color}">${glyph(w.glyph, 18)} ${esc(w.name)}</button>`).join("");
   $("#worlds-nav").onclick = (e) => {
     const b = e.target.closest("button");
     if (b) openWorld(b.dataset.w);
   };
-  stopGalaxy = mountGalaxy($("#galaxy"), openWorld);
+  stopGalaxy = mountGalaxy($("#galaxy"), (id) => openWorld(id));
+  orbit = mountOrbitHome();
+  $("#btn-create").onclick = () => openWorld("welcome", {});
+  $("#btn-atelier").onclick = () => openWorld("atelier");
   $("#btn-chat").onclick = () => togglePanel(true);
   $("#panel-close").onclick = () => togglePanel(false);
   $("#chat-form").onsubmit = (e) => {
@@ -87,8 +106,12 @@ async function init() {
   };
   $("#file").onchange = shareFile;
 
-  const code = new URLSearchParams(location.search).get("room");
-  if (code) joinFromLink(code);
+  const params = new URLSearchParams(location.search);
+  const sharedPlanet = decodePlanet(params.get("planet"), isKnownModule, THEME_IDS);
+  const code = params.get("room");
+  if (sharedPlanet) openWorld("planet", { planet: sharedPlanet });
+  else if (code) joinFromLink(code);
+  else if (!profile.onboarded && !profile.welcomeSeen && !getStoredName()) openWorld("welcome", {});
 }
 
 function chooseMode(g) {
@@ -98,11 +121,11 @@ function chooseMode(g) {
   }
   const modes = g.modes || ["local"];
   const labels = {
-    bot: ["🤖 Solo", g.id === "poules" ? "Contre la poule robot" : "Contre l'ordinateur"],
-    local: ["👥 Même écran", "À deux sur cet appareil"],
-    online: ["🔗 Duel par lien", "Envoie le lien à un ami : il joue depuis son téléphone ou son PC"],
+    bot: [`${glyph("brain", 18)} Solo`, g.id === "poules" ? "Contre la poule robot" : "Contre l'ordinateur"],
+    local: [`${glyph("users", 18)} Même écran`, "À deux sur cet appareil"],
+    online: [`${glyph("link", 18)} Duel par lien`, "Envoie le lien à un ami : il joue depuis son téléphone ou son PC"],
   };
-  modal(`<h2>${esc(g.emoji || "")} ${esc(g.name)}</h2>
+  modal(`<h2>${glyph(g.glyph || "gamepad", 22)} ${esc(g.name)}</h2>
     <div class="modes">${modes
       .map((m) => `<button data-m="${m}"><b>${labels[m][0]}</b><small>${labels[m][1]}</small></button>`)
       .join("")}</div>
@@ -155,14 +178,14 @@ async function createOnline(g) {
     return toast(e.message);
   }
   const link = `${location.origin}${location.pathname}?room=${code}`;
-  const m = modal(`<h2>${esc(g.emoji || "")} ${esc(g.name)} : duel</h2>
+  const m = modal(`<h2>${glyph(g.glyph || "gamepad", 22)} ${esc(g.name)} : duel</h2>
     <p>Envoie ce lien à ton adversaire :</p>
     <input class="link" readonly value="${esc(link)}" />
     <div class="row">
-      <button id="copy">📋 Copier le lien</button>
-      <button id="share" ${navigator.share ? "" : "hidden"}>📤 Partager</button>
+      <button id="copy">${glyph("copy", 16)} Copier le lien</button>
+      <button id="share" ${navigator.share ? "" : "hidden"}>${glyph("share", 16)} Partager</button>
     </div>
-    <p class="muted" id="wait">⏳ En attendant ton adversaire… (garde cette page ouverte)</p>
+    <p class="muted" id="wait">${glyph("hourglass", 16)} En attendant ton adversaire… (garde cette page ouverte)</p>
     <button class="ghost" id="m-cancel">Annuler</button>`);
   $(".link").onclick = (e) => e.target.select();
   $("#copy").onclick = async () => {
@@ -210,7 +233,7 @@ async function joinFromLink(code) {
   closeModal();
   updateConn();
   toast("Connecté ! En attendant que l'hôte lance la partie…", 6000);
-  modal(`<h2>✅ Connecté</h2><p>En attendant que l'hôte lance la partie…</p>`);
+  modal(`<h2>${glyph("check", 22)} Connecté</h2><p>En attendant que l'hôte lance la partie…</p>`);
 }
 
 function updateConn() {
@@ -219,15 +242,22 @@ function updateConn() {
   c.hidden = !on;
   $("#btn-chat").hidden = !on;
   if (on) {
-    c.textContent = `🟢 Salle ${room.code} · ${room.players.length} joueur${room.players.length > 1 ? "s" : ""}`;
+    c.innerHTML = `${glyph("users", 14)} Salle ${esc(room.code)} · ${room.players.length} joueur${room.players.length > 1 ? "s" : ""}`;
     $("#who").textContent = room.players.map((p) => p.name).join(", ");
   }
 }
 
 /* ---------- planètes ---------- */
 let stopGalaxy = null;
+let orbit = null;
 let world = null;
-async function openWorld(id) {
+const mountOrbitHome = () =>
+  mountOrbit($("#orbit"), {
+    getPlanets: loadPlanets,
+    onOpen: (p) => openWorld("planet", { planet: p }),
+    onCreate: () => openWorld("welcome", {}),
+  });
+async function openWorld(id, arg) {
   if (world) return;
   let mod;
   try {
@@ -240,12 +270,31 @@ async function openWorld(id) {
   $("#home").hidden = true;
   stopGalaxy?.();
   stopGalaxy = null;
+  orbit?.destroy();
+  orbit = null;
   const stage = $("#stage");
   stage.hidden = false;
   stage.classList.add("is-world");
   stage.innerHTML = "";
   world = mod.open(stage, {
     quit: closeWorld,
+    arg,
+    openPlanet: (p, opts = {}) => {
+      closeWorld();
+      openWorld("planet", { planet: p, ...opts });
+    },
+    openAtelier: () => {
+      closeWorld();
+      openWorld("atelier");
+    },
+    openWelcome: (a = {}) => {
+      closeWorld();
+      openWorld("welcome", a);
+    },
+    openWorldById: (wid) => {
+      closeWorld();
+      openWorld(wid);
+    },
     games,
     playGame: (gid) => {
       closeWorld();
@@ -266,7 +315,8 @@ function closeWorld() {
   stage.classList.remove("is-world");
   stage.innerHTML = "";
   $("#home").hidden = false;
-  stopGalaxy = mountGalaxy($("#galaxy"), openWorld);
+  stopGalaxy = mountGalaxy($("#galaxy"), (id) => openWorld(id));
+  orbit = mountOrbitHome();
 }
 
 /* ---------- lancement d'un jeu ---------- */
@@ -381,7 +431,7 @@ async function shareFile(e) {
 function addDoc(d) {
   const li = document.createElement("li");
   const who = d.mine ? "Toi" : room?.players.find((p) => p.seat === d.from)?.name || "?";
-  li.innerHTML = `📄 <b>${esc(d.name)}</b> <small>(${esc(who)})</small> <button>Ouvrir</button>`;
+  li.innerHTML = `${glyph("file", 16)} <b>${esc(d.name)}</b> <small>(${esc(who)})</small> <button>Ouvrir</button>`;
   li.querySelector("button").onclick = () => openDoc(d);
   $("#docs").append(li);
   if (!d.mine) {
@@ -397,7 +447,7 @@ function openDoc(d) {
   const url = URL.createObjectURL(d.blob);
   const v = $("#viewer");
   const isPdf = d.type === "application/pdf";
-  v.innerHTML = `<div class="v-bar"><b>${esc(d.name)}</b><a href="${url}" target="_blank" rel="noopener">Ouvrir à part</a><button id="v-close">✕</button></div>
+  v.innerHTML = `<div class="v-bar"><b>${esc(d.name)}</b><a href="${url}" target="_blank" rel="noopener">Ouvrir à part</a><button id="v-close" aria-label="Fermer">${glyph("close", 18)}</button></div>
     ${isPdf ? `<iframe src="${url}" title="${esc(d.name)}"></iframe>` : `<img src="${url}" alt="${esc(d.name)}" />`}`;
   v.hidden = false;
   $("#v-close").onclick = () => {

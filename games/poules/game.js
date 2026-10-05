@@ -1,6 +1,7 @@
 // Poules Armageddon : duel d'artillerie en 3D (Three.js). 3 poules contre 3 poules, œufs explosifs.
 // Modes : "bot" (contre la poule robot), "local" (même écran), "online" (duel par lien).
 // En ligne : le tireur fait foi. Chaque tour, il envoie son tir ; à la fin il envoie l'état complet.
+import { glyph } from "../../js/glyphs.js";
 import * as THREE from "three";
 import * as SIM from "./sim.js";
 
@@ -69,12 +70,12 @@ class Poules {
           <button data-k="up" aria-label="Viser plus haut">▲</button>
           <button data-k="down" aria-label="Viser plus bas">▼</button>
           <button class="pa-weapon" aria-label="Changer d'arme"></button>
-          <button class="pa-fire" data-k="fire" aria-label="Tirer (maintenir pour la puissance)">🥚<span class="pa-pow"><u></u></span></button>
+          <button class="pa-fire" data-k="fire" aria-label="Tirer (maintenir pour la puissance)">${glyph("egg", 26)}<span class="pa-pow"><u></u></span></button>
         </div>
       </div>
       <div class="pa-tools">
-        <button class="pa-view" aria-label="Vue d'ensemble">🔭</button>
-        <button class="pa-quit" aria-label="Quitter">✕</button>
+        <button class="pa-view" aria-label="Vue d'ensemble">${glyph("telescope", 20)}</button>
+        <button class="pa-quit" aria-label="Quitter">${glyph("close", 18)}</button>
       </div>
       <div class="pa-end" hidden><div><h2></h2><p></p><button class="pa-again">Rejouer</button> <button class="pa-leave">Quitter</button></div></div>
       <div class="pa-help">PC : ◀ ▶ marcher · ▲ ▼ viser · Espace maintenu = puissance · J sauter · E arme · V vue</div>`;
@@ -345,7 +346,7 @@ class Poules {
     this.phase = "over";
     const e = this.$(".pa-end");
     e.hidden = false;
-    this.$(".pa-end h2").textContent = w === -1 ? "Égalité !" : `🏆 ${this.teamName(w)} gagne !`;
+    this.$(".pa-end h2").textContent = w === -1 ? "Égalité !" : `${this.teamName(w)} gagne !`;
     this.$(".pa-end p").textContent = w === -1 ? "Plus aucune poule debout." : "Les poules adverses sont éliminées.";
   }
 

@@ -6,6 +6,7 @@ Des jeux à plusieurs, en duel **par simple lien** : sans compte, sans rien inst
 
 ## Ce qui marche aujourd'hui
 - **Planètes** (grandes, animées, sur l'accueil) : **📡 Fréquence Orion** (radios du monde, Radio Browser), **📚 Bibliotheca Nova** (livres, Open Library + lecture Internet Archive), **🌍 Observatoire Terra** (météo Open-Meteo, séismes USGS, Station spatiale, globe jour/nuit). **🎮 Arcadia Prime** (jeux : rubrique « Créés par des Soluniariens », Free-to-Game, Jeux offerts GamerPower). Toutes les API sont gratuites et sans clé ; code dans `js/worlds/`.
+- **Créer ma planète** : au premier lancement, un assistant (pseudo + âge, thème, design, modules) crée la planète du joueur, puis un **guide rapide adapté à son âge**. Elle tourne **en orbite autour d'Univers** (« Mon système »). Une planète est une arborescence de **dossiers, sous-dossiers et modules** : 17 API officielles gratuites (filtrées par âge et par thème), les créations des Soluniariens (jeux, mondes, liens SolunIA/OTAKU) et **Gmail / Drive** (lecture seule, protégés, adultes ; en **Démo** tant que `js/config.js` n'a pas de Client ID : `docs/GOOGLE.md`). Chaque module affiche **Fonctionnel / Démo / À configurer**. Design libre ou **automatique** cohérent avec le thème. Barre « Demande à ta planète » : météo, mails, fichiers, recherche. Partage par lien sans clé. Les visiteurs existants ne sont pas forcés de passer par l'assistant. Guides : `docs/CONNECTEURS.md` (généré par `node tools/gen_guide.mjs`) et `docs/GOOGLE.md`. **Aucun emoji** dans l'interface : toutes les icônes viennent de `js/glyphs.js` (généré par `node tools/gen_glyphs.mjs` à partir de Lucide, licence ISC, comme SolunIA ; un test l'impose). Code : `js/catalog.js`, `js/modules.js`, `js/policy.js`, `js/planetmodel.js`, `js/assistant.js`, `js/google.js`, `js/orbit.js`, `js/worlds/{welcome,planet,atelier}.js`.
 - **NEXUS : Lignée Zénith** (3D) : roguelite évolutif. Une graine absorbe, mute (bonus + coût à chaque niveau),
   conquiert des relais, choisit une spécialisation, puis affronte l'autre lignée au Duel Zénith (KO, 3 balises ou
   majorité). Solo contre un robot (3 difficultés), écran partagé à deux, ou duel en ligne par lien.
@@ -35,7 +36,8 @@ l'état complet à la fin du tour.
 ## Développer
 ```bash
 python -m http.server 8092        # puis http://localhost:8092
-node --test tests/sim.test.mjs tests/nexus.test.mjs   # règles des jeux
+node --test tests/*.test.mjs                      # jeux, règles d'âge, catalogue d'API
+node tests/connectors_live.mjs         # appels réels aux API (réseau)
 ```
 Pas de compilation : des fichiers statiques. Hébergement : GitHub Pages.
 Dépendances chargées depuis un CDN : Three.js (3D) et PeerJS (réseau).

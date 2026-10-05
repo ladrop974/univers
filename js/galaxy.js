@@ -1,9 +1,9 @@
 // Galaxie d'accueil : les grandes planètes d'Univers, animées. Chaque planète a ses propres satellites.
 export const WORLDS = [
-  { id: "radio", name: "Fréquence Orion", tag: "Radios du monde", emoji: "📡", color: "#38bdf8" },
-  { id: "library", name: "Bibliotheca Nova", tag: "Livres et archives", emoji: "📚", color: "#a78bfa" },
-  { id: "terra", name: "Observatoire Terra", tag: "Météo, séismes, Station", emoji: "🌍", color: "#34d399" },
-  { id: "games", name: "Arcadia Prime", tag: "Jeux : Soluniariens et le monde", emoji: "🎮", color: "#f472b6" },
+  { id: "radio", name: "Fréquence Orion", tag: "Radios du monde", glyph: "radio", color: "#38bdf8" },
+  { id: "library", name: "Bibliotheca Nova", tag: "Livres et archives", glyph: "library", color: "#a78bfa" },
+  { id: "terra", name: "Observatoire Terra", tag: "Météo, séismes, Station", glyph: "globe", color: "#34d399" },
+  { id: "games", name: "Arcadia Prime", tag: "Jeux : Soluniariens et le monde", glyph: "gamepad", color: "#f472b6" },
 ];
 
 export function mountGalaxy(cv, onOpen) {

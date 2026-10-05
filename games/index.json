@@ -3,7 +3,7 @@
     "id": "nexus",
     "name": "NEXUS : Lignée Zénith",
     "tagline": "Roguelite évolutif en 3D : mute, conquiers, puis affronte l'autre lignée au Duel Zénith",
-    "emoji": "🧬",
+    "glyph": "dna",
     "modes": [
       "bot",
       "local",
@@ -15,7 +15,7 @@
     "id": "poules",
     "name": "Poules Armageddon",
     "tagline": "Duel d'artillerie en 3D : 3 poules contre 3 poules, œufs explosifs",
-    "emoji": "🐔",
+    "glyph": "egg",
     "modes": [
       "bot",
       "local",
@@ -27,7 +27,7 @@
     "id": "morpion",
     "name": "Morpion",
     "tagline": "Le classique, en duel",
-    "emoji": "❌",
+    "glyph": "grid",
     "modes": [
       "bot",
       "local",
@@ -39,7 +39,7 @@
     "id": "spore",
     "name": "SPORE : Fractale Vivante",
     "tagline": "Fais évoluer ton organisme dans une fractale vivante, seul ou en meute de 1 à 5",
-    "emoji": "🧫",
+    "glyph": "flask",
     "href": "games/spore/index.html",
     "modes": [
       "local"

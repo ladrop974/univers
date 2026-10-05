@@ -1,3 +1,4 @@
+import { glyph } from "../../js/glyphs.js";
 // Morpion : le plus petit jeu à deux. Sert aussi d'exemple pour ajouter un jeu (voir docs/AJOUTER_UN_JEU.md).
 export default {
   id: "morpion",
@@ -19,7 +20,7 @@ class Morpion {
     this.root = ctx.root;
     this.root.innerHTML = `
       <div class="mo">
-        <button class="mo-quit" aria-label="Quitter">✕</button>
+        <button class="mo-quit" aria-label="Quitter">${glyph("close", 18)}</button>
         <h2 class="mo-status"></h2>
         <div class="mo-board" role="grid"></div>
         <button class="mo-again" hidden>Rejouer</button>
@@ -109,7 +110,7 @@ class Morpion {
     }
     const name = (s) => this.ctx.players[s]?.name || (s === 0 ? "Joueur X" : "Joueur O");
     let t;
-    if (this.over) t = this.over.winner === -1 ? "Égalité !" : `🏆 ${name(this.over.winner)} gagne !`;
+    if (this.over) t = this.over.winner === -1 ? "Égalité !" : `${name(this.over.winner)} gagne !`;
     else t = this.isMyTurn() ? "À toi de jouer" : `Tour de ${name(this.turn)}`;
     this.q(".mo-status").textContent = t;
     this.q(".mo-again").hidden = !this.over;

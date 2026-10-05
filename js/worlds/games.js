@@ -1,6 +1,7 @@
 // Planète JEUX « Arcadia Prime » : les jeux faits par des Soluniariens, puis le reste du monde du jeu.
 // Données : catalogue d'Univers (games/index.json), Free-to-Game et GamerPower (gratuits, sans clé).
 import { esc, store, getJSON, shell } from "./common.js";
+import { glyph } from "../glyphs.js";
 
 const F2P = "https://www.freetogame.com/api/games?sort-by=popularity";
 
@@ -14,9 +15,9 @@ export function open(root, { quit, playGame, games = [] }) {
   ui.body.innerHTML = `
     <div class="gm-hero"><canvas id="gm-cv"></canvas></div>
     <div class="rd-tabs gm-tabs" id="gm-tabs">
-      <button data-t="sol" type="button">🧑‍🚀 Soluniariens</button>
-      <button data-t="f2p" type="button">🆓 Free-to-Game</button>
-      <button data-t="gift" type="button">🎁 Jeux offerts</button>
+      <button data-t="sol" type="button">${glyph("users", 16)} Soluniariens</button>
+      <button data-t="f2p" type="button">${glyph("dices", 16)} Free-to-Game</button>
+      <button data-t="gift" type="button">${glyph("star", 16)} Jeux offerts</button>
     </div>
     <section id="gm-view"></section>
     <div class="lb-modal" id="gm-modal" hidden></div>`;
@@ -25,7 +26,7 @@ export function open(root, { quit, playGame, games = [] }) {
   const modal = (html) => {
     const m = $("#gm-modal");
     m.hidden = false;
-    m.innerHTML = `<div class="lb-sheet"><button class="lb-x" type="button" aria-label="Fermer">✕</button>${html}</div>`;
+    m.innerHTML = `<div class="lb-sheet"><button class="lb-x" type="button" aria-label="Fermer">${glyph("close", 18)}</button>${html}</div>`;
     const close = () => {
       m.hidden = true;
       m.innerHTML = "";
@@ -53,12 +54,12 @@ export function open(root, { quit, playGame, games = [] }) {
       <div class="gm-grid">${games
         .map(
           (g) => `<button type="button" class="gm-card gm-sol" data-id="${esc(g.id)}">
-            <span class="gm-emo">${esc(g.emoji || "🎮")}</span><b>${esc(g.name)}</b>
+            <span class="gm-emo">${glyph(g.glyph || "gamepad", 34)}</span><b>${esc(g.name)}</b>
             <small>${esc(g.tagline || "")}</small><em>${esc(g.players || "")}${g.author ? " · par " + esc(g.author) : ""}</em></button>`,
         )
         .join("")}
         <a class="gm-card gm-add" href="https://github.com/ladrop974/univers/blob/main/docs/AJOUTER_UN_JEU.md" target="_blank" rel="noopener noreferrer">
-          <span class="gm-emo">➕</span><b>Ajoute ton jeu</b><small>Un dossier + une ligne : Claude Code l'écrit pour toi.</small><em>Guide ↗</em></a></div>`;
+          <span class="gm-emo">${glyph("plus", 34)}</span><b>Ajoute ton jeu</b><small>Un dossier + une ligne : Claude Code l'écrit pour toi.</small><em>Guide ↗</em></a></div>`;
     view().onclick = (e) => {
       const c = e.target.closest(".gm-sol");
       if (c) playGame?.(c.dataset.id);

@@ -1,6 +1,7 @@
 // Planète RADIO « Fréquence Orion » : les radios du monde, captées comme des signaux venus de l'espace.
 // Données : Radio Browser (radio-browser.info), gratuit, sans clé.
 import { esc, store, getJSON, shell } from "./common.js";
+import { glyph } from "../glyphs.js";
 
 const API = "https://de1.api.radio-browser.info/json";
 const SECTORS = [
@@ -27,7 +28,7 @@ export function open(root, { quit }) {
   ui.body.innerHTML = `
     <div class="rd-grid">
       <section class="rd-left">
-        <div class="rd-tabs"><button data-t="scan" class="on" type="button">📡 Scanner</button><button data-t="beacons" type="button">⭐ Mes balises <i id="rd-n"></i></button></div>
+        <div class="rd-tabs"><button data-t="scan" class="on" type="button">${glyph("radio", 16)} Scanner</button><button data-t="beacons" type="button">${glyph("star", 16)} Mes balises <i id="rd-n"></i></button></div>
         <form class="rd-search"><input id="rd-q" placeholder="Capter un signal (nom de radio)…" autocomplete="off" /><button type="submit">Scanner</button></form>
         <h3>Secteurs</h3><div class="chips" id="rd-sectors"></div>
         <h3>Fréquences</h3><div class="chips" id="rd-freqs"></div>
@@ -40,9 +41,9 @@ export function open(root, { quit }) {
       </section>
     </div>
     <div class="rd-bar">
-      <button id="rd-play" type="button" aria-label="Lecture / pause" disabled>▶</button>
+      <button id="rd-play" type="button" aria-label="Lecture / pause" disabled>${glyph("play", 18)}</button>
       <div class="rd-bar-t" id="rd-bar-t">Choisis un signal</div>
-      <label>🔊 <input id="rd-vol" type="range" min="0" max="1" step="0.05" value="${st.get("vol", 0.8)}" /></label>
+      <label>${glyph("volume", 16)} <input id="rd-vol" type="range" min="0" max="1" step="0.05" value="${st.get("vol", 0.8)}" /></label>
     </div>`;
   const $ = (s) => ui.body.querySelector(s);
   audio.volume = st.get("vol", 0.8);
@@ -76,7 +77,7 @@ export function open(root, { quit }) {
     setTab();
     if (tab === "beacons") {
       list = beacons.slice();
-      $("#rd-status").textContent = list.length ? "" : "Aucune balise : appuie sur ⭐ à côté d'un signal pour le garder ici.";
+      $("#rd-status").textContent = list.length ? "" : "Aucune balise : appuie sur l'étoile à côté d'un signal pour le garder ici.";
       render();
     } else scan();
   };
@@ -120,7 +121,7 @@ export function open(root, { quit }) {
           <button type="button" class="rd-pick"><span class="sig" aria-label="Signal ${strength} sur 5">${"▮".repeat(strength)}${"▯".repeat(5 - strength)}</span>
             <b>${esc(r.name.trim() || "Signal inconnu")}</b>
             <small>${esc(r.country || "")}${r.tags ? " · " + esc(r.tags.split(",").slice(0, 3).join(", ")) : ""}${r.bitrate ? " · " + r.bitrate + " kb/s" : ""}</small></button>
-          <button type="button" class="rd-star ${isBeacon(r.stationuuid) ? "on" : ""}" aria-label="Garder ce signal">${isBeacon(r.stationuuid) ? "★" : "☆"}</button></li>`;
+          <button type="button" class="rd-star ${isBeacon(r.stationuuid) ? "on" : ""}" aria-label="Garder ce signal">${glyph("star", 18)}</button></li>`;
       })
       .join("");
   }
@@ -149,15 +150,15 @@ export function open(root, { quit }) {
     render();
   }
   audio.onplaying = () => {
-    $("#rd-play").textContent = "⏸";
-    $("#rd-bar-t").textContent = "📡 " + (cur?.name.trim() || "");
+    $("#rd-play").innerHTML = glyph("pause", 18);
+    $("#rd-bar-t").textContent = cur?.name.trim() || "";
   };
-  audio.onpause = () => ($("#rd-play").textContent = "▶");
+  audio.onpause = () => ($("#rd-play").innerHTML = glyph("play", 18));
   audio.onwaiting = () => ($("#rd-bar-t").textContent = "Signal faible… " + (cur?.name.trim() || ""));
   audio.onerror = () => {
     if (!cur) return;
     $("#rd-bar-t").textContent = "Signal perdu : " + cur.name.trim();
-    $("#rd-play").textContent = "▶";
+    $("#rd-play").innerHTML = glyph("play", 18);
     ui.toast("Ce signal ne répond pas. Essaie-en un autre.");
   };
   $("#rd-play").disabled = false;

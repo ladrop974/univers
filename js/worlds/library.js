@@ -1,6 +1,7 @@
 // Planète BIBLIOTHÈQUE « Bibliotheca Nova » : les livres du monde rangés comme des archives stellaires.
 // Données : Open Library (catalogue, couvertures) et Internet Archive (lecture des livres libres). Gratuit, sans clé.
 import { esc, store, getJSON, shell } from "./common.js";
+import { glyph } from "../glyphs.js";
 
 const OL = "https://openlibrary.org";
 const FIELDS = "key,title,author_name,cover_i,first_publish_year,ia,ebook_access,subject,number_of_pages_median";
@@ -23,10 +24,10 @@ export function open(root, { quit }) {
   ui.body.innerHTML = `
     <div class="lb-hero"><canvas id="lb-cv"></canvas></div>
     <div class="lb-main">
-      <div class="rd-tabs"><button data-t="scan" class="on" type="button">🔭 Explorer</button><button data-t="shelf" type="button">📦 Ma soute <i id="lb-n"></i></button></div>
+      <div class="rd-tabs"><button data-t="scan" class="on" type="button">${glyph("telescope", 16)} Explorer</button><button data-t="shelf" type="button">${glyph("folder", 16)} Ma soute <i id="lb-n"></i></button></div>
       <form class="rd-search" id="lb-form"><input id="lb-q" placeholder="Titre, auteur, sujet…" autocomplete="off" /><button type="submit">Chercher</button></form>
       <div class="chips" id="lb-neb"></div>
-      <div class="lb-opts"><label><input type="checkbox" id="lb-free" /> 📡 Lisibles en ligne seulement</label><label><input type="checkbox" id="lb-fr" /> 🇫🇷 En français</label></div>
+      <div class="lb-opts"><label><input type="checkbox" id="lb-free" /> ${glyph("radio", 16)} Lisibles en ligne seulement</label><label><input type="checkbox" id="lb-fr" /> En français</label></div>
       <div class="rd-status muted" id="lb-status"></div>
       <div class="lb-grid" id="lb-grid"></div>
       <button class="lb-more" id="lb-more" type="button" hidden>Charger la suite</button>
@@ -124,7 +125,7 @@ export function open(root, { quit }) {
         const img = cover(b);
         const free = b.ebook_access === "public" && b.ia?.length;
         return `<button type="button" class="lb-card" data-i="${i}">
-          <span class="lb-cover" style="--h:${hue(b.title)}">${img ? `<img src="${img}" alt="" loading="lazy" onerror="this.remove()" />` : ""}<em>${esc(b.title)}</em>${free ? '<u title="Lisible en ligne">📡</u>' : ""}</span>
+          <span class="lb-cover" style="--h:${hue(b.title)}">${img ? `<img src="${img}" alt="" loading="lazy" onerror="this.remove()" />` : ""}<em>${esc(b.title)}</em>${free ? '<u title="Lisible en ligne">${glyph("radio", 14)}</u>' : ""}</span>
           <b>${esc(b.title)}</b><small>${esc((b.author_name || ["Auteur inconnu"])[0])}${b.first_publish_year ? " · " + b.first_publish_year : ""}</small></button>`;
       })
       .join("");
@@ -141,12 +142,12 @@ export function open(root, { quit }) {
     const ia = free ? b.ia.find((x) => !x.startsWith("isbn_")) || b.ia[0] : "";
     m.hidden = false;
     m.innerHTML = `<div class="lb-sheet" role="dialog" aria-label="${esc(b.title)}">
-      <button class="lb-x" type="button" aria-label="Fermer">✕</button>
+      <button class="lb-x" type="button" aria-label="Fermer">${glyph("close", 18)}</button>
       <div class="lb-sheet-top">${cover(b, "L") ? `<img src="${cover(b, "L")}" alt="" onerror="this.remove()" />` : ""}
         <div><h2>${esc(b.title)}</h2><p class="muted">${esc((b.author_name || []).join(", ") || "Auteur inconnu")}${b.first_publish_year ? " · " + b.first_publish_year : ""}${b.number_of_pages_median ? " · " + b.number_of_pages_median + " p." : ""}</p>
         <p class="lb-desc muted">Lecture de la fiche…</p>
-        <div class="row"><button type="button" id="lb-keep">${onShelf(b.key) ? "✓ Dans ma soute" : "📦 Garder dans ma soute"}</button>
-        ${free ? `<button type="button" id="lb-read">📖 Lire maintenant</button>` : ""}
+        <div class="row"><button type="button" id="lb-keep">${onShelf(b.key) ? "Dans ma soute" : "Garder dans ma soute"}</button>
+        ${free ? `<button type="button" id="lb-read">${glyph("book", 16)} Lire maintenant</button>` : ""}
         <a class="lb-link" href="${OL}${esc(b.key)}" target="_blank" rel="noopener noreferrer">Fiche Open Library ↗</a></div></div></div>
       <div class="lb-reader" id="lb-reader" hidden></div></div>`;
     const close = () => {
@@ -160,7 +161,7 @@ export function open(root, { quit }) {
     m.querySelector("#lb-keep").onclick = (e) => {
       shelf = onShelf(b.key) ? shelf.filter((x) => x.key !== b.key) : [...shelf, b];
       st.set("shelf", shelf.slice(0, 300));
-      e.target.textContent = onShelf(b.key) ? "✓ Dans ma soute" : "📦 Garder dans ma soute";
+      e.target.textContent = onShelf(b.key) ? "Dans ma soute" : "Garder dans ma soute";
       setTab();
     };
     const rd = m.querySelector("#lb-read");

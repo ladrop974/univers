@@ -1,6 +1,7 @@
 // Planète MÉTÉO & TERRE « Observatoire Terra » : un globe vivant (séismes, Station spatiale, jour/nuit) et des sondes météo.
 // Données : Open-Meteo (météo + villes), USGS (séismes), wheretheiss.at (ISS), Natural Earth via world-atlas (continents). Gratuit, sans clé.
 import { esc, store, getJSON, shell } from "./common.js";
+import { glyph } from "../glyphs.js";
 
 const D3 = "https://cdn.jsdelivr.net/npm/d3-geo@3.1.1/+esm";
 const TOPO = "https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/+esm";
@@ -9,8 +10,8 @@ const QUAKES = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_da
 const ISS = "https://api.wheretheiss.at/v1/satellites/25544";
 
 const WMO = (c) =>
-  c === 0 ? ["☀️", "Ciel dégagé"] : c <= 2 ? ["🌤️", "Peu nuageux"] : c === 3 ? ["☁️", "Couvert"] : c <= 48 ? ["🌫️", "Brouillard"] : c <= 57 ? ["🌦️", "Bruine"]
-  : c <= 67 ? ["🌧️", "Pluie"] : c <= 77 ? ["❄️", "Neige"] : c <= 82 ? ["🌧️", "Averses"] : c <= 86 ? ["🌨️", "Averses de neige"] : ["⛈️", "Orage"];
+  c === 0 ? ["sun", "Ciel dégagé"] : c <= 2 ? ["cloudsun", "Peu nuageux"] : c === 3 ? ["cloud", "Couvert"] : c <= 48 ? ["fog", "Brouillard"] : c <= 57 ? ["rain", "Bruine"]
+  : c <= 67 ? ["rain", "Pluie"] : c <= 77 ? ["snow", "Neige"] : c <= 82 ? ["rain", "Averses"] : c <= 86 ? ["snow", "Averses de neige"] : ["storm", "Orage"];
 const DAYS = ["dim", "lun", "mar", "mer", "jeu", "ven", "sam"];
 
 export function open(root, { quit }) {
@@ -27,14 +28,14 @@ export function open(root, { quit }) {
     <div class="tr-grid">
       <section class="tr-globe"><canvas id="tr-cv" aria-label="Globe terrestre"></canvas><div class="tr-hint muted" id="tr-hint">Chargement du globe…</div>
         <div class="tr-layers">
-          <label><input type="checkbox" data-l="quakes" ${layers.quakes ? "checked" : ""}/> 🔴 Séismes</label>
-          <label><input type="checkbox" data-l="iss" ${layers.iss ? "checked" : ""}/> 🛰️ Station</label>
-          <label><input type="checkbox" data-l="night" ${layers.night ? "checked" : ""}/> 🌙 Nuit</label></div></section>
+          <label><input type="checkbox" data-l="quakes" ${layers.quakes ? "checked" : ""}/> ${glyph("waves", 16)} Séismes</label>
+          <label><input type="checkbox" data-l="iss" ${layers.iss ? "checked" : ""}/> ${glyph("satellite", 16)} Station</label>
+          <label><input type="checkbox" data-l="night" ${layers.night ? "checked" : ""}/> ${glyph("moon", 16)} Nuit</label></div></section>
       <section class="tr-side">
         <form class="rd-search" id="tr-form"><input id="tr-q" placeholder="Déployer une sonde : ville…" autocomplete="off" /><button type="submit">Envoyer</button></form>
         <div class="tr-probe" id="tr-probe"><small class="muted">Sonde en cours de déploiement…</small></div>
-        <h3>🛰️ Station spatiale</h3><div class="tr-iss muted" id="tr-iss">Recherche du signal…</div>
-        <h3>🔴 Secousses des dernières 24 h</h3><ul class="tr-quakes" id="tr-quakes"></ul>
+        <h3>${glyph("satellite", 16)} Station spatiale</h3><div class="tr-iss muted" id="tr-iss">Recherche du signal…</div>
+        <h3>${glyph("waves", 16)} Secousses des dernières 24 h</h3><ul class="tr-quakes" id="tr-quakes"></ul>
       </section>
     </div>`;
   const $ = (s) => ui.body.querySelector(s);
@@ -52,9 +53,9 @@ export function open(root, { quit }) {
       if (dead) return;
       const c = d.current;
       const [ic, label] = WMO(c.weather_code);
-      el.innerHTML = `<div class="tr-now"><span class="tr-ic">${ic}</span><div><b>${esc(p.name)}</b><div class="tr-temp">${Math.round(c.temperature_2m)}°C</div><small>${label} · ressenti ${Math.round(c.apparent_temperature)}°</small></div></div>
-        <div class="tr-stats"><span>💨 ${Math.round(c.wind_speed_10m)} km/h</span><span>💧 ${c.relative_humidity_2m} %</span><span>${c.is_day ? "🌞 Jour" : "🌙 Nuit"}</span></div>
-        <div class="tr-days">${d.daily.time.map((t, i) => `<div><small>${DAYS[new Date(t + "T12:00").getDay()]}</small><span>${WMO(d.daily.weather_code[i])[0]}</span><b>${Math.round(d.daily.temperature_2m_max[i])}°</b><small>${Math.round(d.daily.temperature_2m_min[i])}°</small></div>`).join("")}</div>`;
+      el.innerHTML = `<div class="tr-now"><span class="tr-ic">${glyph(ic, 46)}</span><div><b>${esc(p.name)}</b><div class="tr-temp">${Math.round(c.temperature_2m)}°C</div><small>${label} · ressenti ${Math.round(c.apparent_temperature)}°</small></div></div>
+        <div class="tr-stats"><span>${glyph("wind", 16)} ${Math.round(c.wind_speed_10m)} km/h</span><span>${glyph("droplet", 16)} ${c.relative_humidity_2m} %</span><span>${c.is_day ? glyph("sun", 16) + " Jour" : glyph("moon", 16) + " Nuit"}</span></div>
+        <div class="tr-days">${d.daily.time.map((t, i) => `<div><small>${DAYS[new Date(t + "T12:00").getDay()]}</small><span>${glyph(WMO(d.daily.weather_code[i])[0], 24)}</span><b>${Math.round(d.daily.temperature_2m_max[i])}°</b><small>${Math.round(d.daily.temperature_2m_min[i])}°</small></div>`).join("")}</div>`;
     } catch {
       if (!dead) el.innerHTML = `<small class="muted">La sonde ne répond pas. Réessaie : ${esc(p.name)}.</small>`;
     }
